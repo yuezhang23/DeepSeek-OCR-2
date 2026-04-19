@@ -230,18 +230,18 @@ def main():
             page_image_path = os.path.join(tmp_dir, f"page_{page_index}.png")
             image.save(page_image_path)
 
-            page_output_dir = output_dir / f"page_{page_index + 1:04d}"
-            page_images_dir = page_output_dir / "images"
-            if page_output_dir.exists():
-                shutil.rmtree(page_output_dir)
-            page_output_dir.mkdir(parents=True, exist_ok=True)
-            page_images_dir.mkdir(parents=True, exist_ok=True)
+            # page_output_dir = output_dir / f"page_{page_index + 1:04d}"
+            # page_images_dir = page_output_dir / "images"
+            # if page_output_dir.exists():
+            #     shutil.rmtree(page_output_dir)
+            # page_output_dir.mkdir(parents=True, exist_ok=True)
+            # page_images_dir.mkdir(parents=True, exist_ok=True)
 
             infer_result = model.infer(
                 tokenizer,
                 prompt=args.prompt,
                 image_file=page_image_path,
-                output_path=str(page_output_dir),
+                output_path=args,
                 base_size=args.base_size,
                 image_size=args.image_size,
                 crop_mode=args.crop_mode,
@@ -249,12 +249,12 @@ def main():
             )
 
             # load result.mmd from this page output folder
-            result_mmd_path = page_output_dir / "result.mmd"
-            content = get_text_from_infer_result(infer_result) if infer_result is not None else ""
-            if result_mmd_path.exists():
-                with open(result_mmd_path, "r", encoding="utf-8") as f:
-                    result_mmd = f.read()
-                content = result_mmd
+            # result_mmd_path = page_output_dir / "result.mmd"
+            # content = get_text_from_infer_result(infer_result) if infer_result is not None else ""
+            # if result_mmd_path.exists():
+            #     with open(result_mmd_path, "r", encoding="utf-8") as f:
+            #         result_mmd = f.read()
+            #     content = result_mmd
 
             # content = get_text_from_infer_result(result)
             # if "<｜end▁of▁sentence｜>" in content:
@@ -262,39 +262,39 @@ def main():
             # elif args.skip_repeat:
             #     continue
 
-            page_split = "\n<--- Page Split --->"
-            contents_det.append(content + f"\n{page_split}\n")
+    #         page_split = "\n<--- Page Split --->"
+    #         contents_det.append(content + f"\n{page_split}\n")
 
-            matches_ref, matches_images, matches_other = re_match(content)
-            result_image = draw_bounding_boxes(image.copy(), matches_ref, page_index, str(page_images_dir))
-            result_image.save(page_output_dir / "result_with_boxes.jpg")
-            draw_images.append(result_image)
+    #         matches_ref, matches_images, matches_other = re_match(content)
+    #         result_image = draw_bounding_boxes(image.copy(), matches_ref, page_index, str(page_images_dir))
+    #         result_image.save(page_output_dir / "result_with_boxes.jpg")
+    #         draw_images.append(result_image)
 
-            combined_content = content
-            for image_idx, match_image in enumerate(matches_images):
-                combined_content = combined_content.replace(match_image, f"![](page_{page_index + 1:04d}/images/{image_idx}.jpg)\n")
+    #         combined_content = content
+    #         for image_idx, match_image in enumerate(matches_images):
+    #             combined_content = combined_content.replace(match_image, f"![](page_{page_index + 1:04d}/images/{image_idx}.jpg)\n")
 
-            for match_other in matches_other:
-                combined_content = (
-                    combined_content.replace(match_other, "")
-                    .replace("\\coloneqq", ":=")
-                    .replace("\\eqqcolon", "=:")
-                    .replace("\n\n\n\n", "\n\n")
-                    .replace("\n\n\n", "\n\n")
-                )
+    #         for match_other in matches_other:
+    #             combined_content = (
+    #                 combined_content.replace(match_other, "")
+    #                 .replace("\\coloneqq", ":=")
+    #                 .replace("\\eqqcolon", "=:")
+    #                 .replace("\n\n\n\n", "\n\n")
+    #                 .replace("\n\n\n", "\n\n")
+    #             )
 
-            contents.append(combined_content + f"\n{page_split}\n")
+    #         contents.append(combined_content + f"\n{page_split}\n")
 
-    with open(mmd_det_path, "w", encoding="utf-8") as f_det:
-        f_det.write("".join(contents_det))
+    # with open(mmd_det_path, "w", encoding="utf-8") as f_det:
+    #     f_det.write("".join(contents_det))
 
-    with open(mmd_path, "w", encoding="utf-8") as f_clean:
-        f_clean.write("".join(contents))
+    # with open(mmd_path, "w", encoding="utf-8") as f_clean:
+    #     f_clean.write("".join(contents))
 
-    pil_to_pdf_img2pdf(draw_images, str(pdf_out_path))
-    print(f"Saved: {mmd_det_path}")
-    print(f"Saved: {mmd_path}")
-    print(f"Saved: {pdf_out_path}")
+    # pil_to_pdf_img2pdf(draw_images, str(pdf_out_path))
+    # print(f"Saved: {mmd_det_path}")
+    # print(f"Saved: {mmd_path}")
+    # print(f"Saved: {pdf_out_path}")
 
 
 if __name__ == "__main__":
