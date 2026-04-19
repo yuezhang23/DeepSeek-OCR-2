@@ -136,8 +136,6 @@ def re_match(text):
 
 
 def extract_coordinates_and_label(ref_text, image_width, image_height):
-
-
     try:
         label_type = ref_text[1]
         cor_list = eval(ref_text[2])

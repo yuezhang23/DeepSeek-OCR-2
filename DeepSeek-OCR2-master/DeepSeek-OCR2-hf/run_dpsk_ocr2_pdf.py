@@ -6,7 +6,6 @@ import tempfile
 from pathlib import Path
 
 import fitz
-import img2pdf
 import numpy as np
 import torch
 from PIL import Image, ImageDraw, ImageFont
@@ -21,19 +20,18 @@ def str2bool(value: str) -> bool:
 def parse_args():
     parser = argparse.ArgumentParser(description="DeepSeek-OCR2 PDF inference with Hugging Face Transformers")
     parser.add_argument("--model-name", type=str, default="deepseek-ai/DeepSeek-OCR-2")
-    parser.add_argument("--input_path", type=str, required=True, help="Input PDF path")
-    parser.add_argument("--output_path", type=str, required=True, help="Output directory")
+    parser.add_argument("--input-path", "--input_path", dest="input_path", type=str, required=True, help="Input PDF path")
+    parser.add_argument("--output-path", "--output_path", dest="output_path", type=str, required=True, help="Output directory")
     parser.add_argument("--prompt", type=str, default="<image>\n<|grounding|>Convert the document to markdown. ")
     parser.add_argument("--dpi", type=int, default=144)
     parser.add_argument("--base-size", type=int, default=1024)
-    parser.add_argument("--image-size", type=int, default=768)
+    parser.add_argument("--image-size", type=int, default=640)
     parser.add_argument("--crop-mode", type=str2bool, default=True)
-    parser.add_argument("--save-results", type=str2bool, default=False)
+    parser.add_argument("--save-results", type=str2bool, default=True)
     parser.add_argument("--skip-repeat", type=str2bool, default=False)
     parser.add_argument("--cuda-visible-devices", type=str, default="0")
     parser.add_argument("--dtype", type=str, default="bfloat16", choices=["bfloat16", "float16", "float32"])
     return parser.parse_args()
-
 
 def pdf_to_images_high_quality(pdf_path, dpi=144):
     images = []
@@ -58,17 +56,10 @@ def pil_to_pdf_img2pdf(pil_images, output_path):
     if not pil_images:
         return
 
-    image_bytes_list = []
-    for img in pil_images:
-        if img.mode != "RGB":
-            img = img.convert("RGB")
-        img_buffer = io.BytesIO()
-        img.save(img_buffer, format="JPEG", quality=95)
-        image_bytes_list.append(img_buffer.getvalue())
+    rgb_images = [img.convert("RGB") if img.mode != "RGB" else img for img in pil_images]
 
-    pdf_bytes = img2pdf.convert(image_bytes_list)
-    with open(output_path, "wb") as output_file:
-        output_file.write(pdf_bytes)
+    first_img, *rest_imgs = rgb_images
+    first_img.save(output_path, format="PDF", save_all=True, append_images=rest_imgs)
 
 
 def re_match(text):
@@ -234,6 +225,7 @@ def main():
                 crop_mode=args.crop_mode,
                 save_results=args.save_results,
             )
+            
 
             content = get_text_from_infer_result(result)
             if "<｜end▁of▁sentence｜>" in content:
