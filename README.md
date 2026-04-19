@@ -126,6 +126,7 @@ or you can
 ```Shell
 cd DeepSeek-OCR2-master/DeepSeek-OCR2-hf
 python run_dpsk_ocr2.py
+python run_dpsk_ocr2_pdf.py --input-path /path/to/input.pdf --output-path /path/to/output_dir
 ```
 ## Support-Modes
 - Dynamic resolution

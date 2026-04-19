@@ -8,10 +8,10 @@ import torch
 from concurrent.futures import ThreadPoolExecutor
  
 
-# if torch.version.cuda == '11.8':
-#     os.environ["TRITON_PTXAS_PATH"] = "/usr/local/cuda-11.8/bin/ptxas"
+if torch.version.cuda == '11.8':
+    os.environ["TRITON_PTXAS_PATH"] = "/usr/local/cuda-11.8/bin/ptxas"
 os.environ['VLLM_USE_V1'] = '0'
-# os.environ["CUDA_VISIBLE_DEVICES"] = '0'
+os.environ["CUDA_VISIBLE_DEVICES"] = '0'
 
 
 from config import MODEL_PATH, INPUT_PATH, OUTPUT_PATH, PROMPT, SKIP_REPEAT, MAX_CONCURRENCY, NUM_WORKERS, CROP_MODE
@@ -242,16 +242,13 @@ if __name__ == "__main__":
 
 
     prompt = PROMPT
-
     # batch_inputs = []
-
     with ThreadPoolExecutor(max_workers=NUM_WORKERS) as executor:  
         batch_inputs = list(tqdm(
             executor.map(process_single_image, images),
             total=len(images),
             desc="Pre-processed images"
         ))
-
 
     # for image in tqdm(images):
 
