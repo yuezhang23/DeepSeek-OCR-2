@@ -33,24 +33,39 @@ def parse_args():
     parser.add_argument("--dtype", type=str, default="bfloat16", choices=["bfloat16", "float16", "float32"])
     return parser.parse_args()
 
-def pdf_to_images_high_quality(pdf_path, dpi=144):
-    images = []
-    pdf_document = fitz.open(pdf_path)
 
+def pdf_to_images_high_quality(pdf_path, dpi=144, image_format="PNG"):
+    """
+    pdf2images
+    """
+    images = []
+    
+    pdf_document = fitz.open(pdf_path)
+    
     zoom = dpi / 72.0
     matrix = fitz.Matrix(zoom, zoom)
-
+    
     for page_num in range(pdf_document.page_count):
         page = pdf_document[page_num]
+
         pixmap = page.get_pixmap(matrix=matrix, alpha=False)
         Image.MAX_IMAGE_PIXELS = None
-        img_data = pixmap.tobytes("png")
-        img = Image.open(io.BytesIO(img_data)).convert("RGB")
-        images.append(img)
 
+        if image_format.upper() == "PNG":
+            img_data = pixmap.tobytes("png")
+            img = Image.open(io.BytesIO(img_data))
+        else:
+            img_data = pixmap.tobytes("png")
+            img = Image.open(io.BytesIO(img_data))
+            if img.mode in ('RGBA', 'LA'):
+                background = Image.new('RGB', img.size, (255, 255, 255))
+                background.paste(img, mask=img.split()[-1] if img.mode == 'RGBA' else None)
+                img = background
+        
+        images.append(img)
+    
     pdf_document.close()
     return images
-
 
 def pil_to_pdf_img2pdf(pil_images, output_path):
     if not pil_images:
@@ -200,6 +215,7 @@ def main():
 
     print("Loading PDF pages...")
     images = pdf_to_images_high_quality(args.input_path, dpi=args.dpi)
+    print(f"Total generated images: {len(images)}")
 
     base_name = Path(args.input_path).stem
     mmd_det_path = output_dir / f"{base_name}_det.mmd"
