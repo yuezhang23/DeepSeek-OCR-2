@@ -21,8 +21,8 @@ def str2bool(value: str) -> bool:
 def parse_args():
     parser = argparse.ArgumentParser(description="DeepSeek-OCR2 PDF inference with Hugging Face Transformers")
     parser.add_argument("--model-name", type=str, default="deepseek-ai/DeepSeek-OCR-2")
-    parser.add_argument("--input-path", type=str, required=True, help="Input PDF path")
-    parser.add_argument("--output-path", type=str, required=True, help="Output directory")
+    parser.add_argument("--input_path", type=str, required=True, help="Input PDF path")
+    parser.add_argument("--output_path", type=str, required=True, help="Output directory")
     parser.add_argument("--prompt", type=str, default="<image>\n<|grounding|>Convert the document to markdown. ")
     parser.add_argument("--dpi", type=int, default=144)
     parser.add_argument("--base-size", type=int, default=1024)
