@@ -241,7 +241,7 @@ def main():
                 tokenizer,
                 prompt=args.prompt,
                 image_file=page_image_path,
-                output_path=args,
+                output_path=args.output_path,
                 base_size=args.base_size,
                 image_size=args.image_size,
                 crop_mode=args.crop_mode,
