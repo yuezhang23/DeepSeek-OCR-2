@@ -27,7 +27,7 @@ def parse_args():
     parser.add_argument("--base-size", type=int, default=1024)
     parser.add_argument("--image-size", type=int, default=640)
     parser.add_argument("--crop-mode", type=str2bool, default=True)
-    parser.add_argument("--save-results", type=str2bool, default=True)
+    parser.add_argument("--save-results", type=str2bool, default=False)
     parser.add_argument("--skip-repeat", type=str2bool, default=False)
     parser.add_argument("--cuda-visible-devices", type=str, default="0")
     parser.add_argument("--dtype", type=str, default="bfloat16", choices=["bfloat16", "float16", "float32"])
@@ -241,7 +241,6 @@ def main():
                 crop_mode=args.crop_mode,
                 save_results=args.save_results,
             )
-            
 
             content = get_text_from_infer_result(result)
             if "<｜end▁of▁sentence｜>" in content:
