@@ -45,7 +45,7 @@ def main():
 	if torch.cuda.is_available():
 		model = model.cuda().to(torch.bfloat16)
 
-	model.infer(
+	res = model.infer(
 		tokenizer,
 		prompt=args.prompt,
 		image_file=args.image_file,
