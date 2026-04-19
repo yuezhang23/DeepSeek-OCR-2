@@ -3,6 +3,7 @@ import io
 import os
 import re
 import tempfile
+import shutil
 from pathlib import Path
 
 import fitz
@@ -27,7 +28,7 @@ def parse_args():
     parser.add_argument("--base-size", type=int, default=1024)
     parser.add_argument("--image-size", type=int, default=640)
     parser.add_argument("--crop-mode", type=str2bool, default=True)
-    parser.add_argument("--save-results", type=str2bool, default=False)
+    parser.add_argument("--save-results", type=str2bool, default=True)
     parser.add_argument("--skip-repeat", type=str2bool, default=False)
     parser.add_argument("--cuda-visible-devices", type=str, default="0")
     parser.add_argument("--dtype", type=str, default="bfloat16", choices=["bfloat16", "float16", "float32"])
@@ -129,7 +130,7 @@ def draw_bounding_boxes(image, refs, page_index, image_output_dir):
 
                 if label_type == "image":
                     cropped = image.crop((x1, y1, x2, y2))
-                    cropped.save(os.path.join(image_output_dir, f"{page_index}_{image_idx}.jpg"))
+                    cropped.save(os.path.join(image_output_dir, f"{image_idx}.jpg"))
                     image_idx += 1
 
                 if label_type == "title":
@@ -206,9 +207,7 @@ def main():
     os.environ["CUDA_VISIBLE_DEVICES"] = args.cuda_visible_devices
 
     output_dir = Path(args.output_path)
-    image_output_dir = output_dir / "images"
     output_dir.mkdir(parents=True, exist_ok=True)
-    image_output_dir.mkdir(parents=True, exist_ok=True)
 
     print("Loading model...")
     tokenizer, model = build_model(args.model_name, args.dtype)
@@ -231,43 +230,60 @@ def main():
             page_image_path = os.path.join(tmp_dir, f"page_{page_index}.png")
             image.save(page_image_path)
 
-            result = model.infer(
+            page_output_dir = output_dir / f"page_{page_index + 1:04d}"
+            page_images_dir = page_output_dir / "images"
+            if page_output_dir.exists():
+                shutil.rmtree(page_output_dir)
+            page_output_dir.mkdir(parents=True, exist_ok=True)
+            page_images_dir.mkdir(parents=True, exist_ok=True)
+
+            infer_result = model.infer(
                 tokenizer,
                 prompt=args.prompt,
                 image_file=page_image_path,
-                output_path=str(output_dir),
+                output_path=str(page_output_dir),
                 base_size=args.base_size,
                 image_size=args.image_size,
                 crop_mode=args.crop_mode,
                 save_results=args.save_results,
             )
 
-            content = get_text_from_infer_result(result)
-            if "<｜end▁of▁sentence｜>" in content:
-                content = content.replace("<｜end▁of▁sentence｜>", "")
-            elif args.skip_repeat:
-                continue
+            # load result.mmd from this page output folder
+            result_mmd_path = page_output_dir / "result.mmd"
+            content = get_text_from_infer_result(infer_result) if infer_result is not None else ""
+            if result_mmd_path.exists():
+                with open(result_mmd_path, "r", encoding="utf-8") as f:
+                    result_mmd = f.read()
+                content = result_mmd
+
+            # content = get_text_from_infer_result(result)
+            # if "<｜end▁of▁sentence｜>" in content:
+            #     content = content.replace("<｜end▁of▁sentence｜>", "")
+            # elif args.skip_repeat:
+            #     continue
 
             page_split = "\n<--- Page Split --->"
             contents_det.append(content + f"\n{page_split}\n")
 
             matches_ref, matches_images, matches_other = re_match(content)
-            result_image = draw_bounding_boxes(image.copy(), matches_ref, page_index, str(image_output_dir))
+            result_image = draw_bounding_boxes(image.copy(), matches_ref, page_index, str(page_images_dir))
+            result_image.save(page_output_dir / "result_with_boxes.jpg")
             draw_images.append(result_image)
 
+            combined_content = content
             for image_idx, match_image in enumerate(matches_images):
-                content = content.replace(match_image, f"![](images/{page_index}_{image_idx}.jpg)\n")
+                combined_content = combined_content.replace(match_image, f"![](page_{page_index + 1:04d}/images/{image_idx}.jpg)\n")
 
             for match_other in matches_other:
-                content = (
-                    content.replace(match_other, "")
+                combined_content = (
+                    combined_content.replace(match_other, "")
                     .replace("\\coloneqq", ":=")
                     .replace("\\eqqcolon", "=:")
                     .replace("\n\n\n\n", "\n\n")
                     .replace("\n\n\n", "\n\n")
                 )
 
-            contents.append(content + f"\n{page_split}\n")
+            contents.append(combined_content + f"\n{page_split}\n")
 
     with open(mmd_det_path, "w", encoding="utf-8") as f_det:
         f_det.write("".join(contents_det))
