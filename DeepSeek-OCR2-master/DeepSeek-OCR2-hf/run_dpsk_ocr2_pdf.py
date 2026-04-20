@@ -206,9 +206,9 @@ def main():
     os.environ["CUDA_VISIBLE_DEVICES"] = args.cuda_visible_devices
 
     output_dir = Path(args.output_path)
-    image_output_dir = output_dir / "images"
+    # image_output_dir = output_dir / "images"
     output_dir.mkdir(parents=True, exist_ok=True)
-    image_output_dir.mkdir(parents=True, exist_ok=True)
+    # image_output_dir.mkdir(parents=True, exist_ok=True)
 
     print("Loading model...")
     tokenizer, model = build_model(args.model_name, args.dtype)
@@ -231,13 +231,13 @@ def main():
             page_image_path = os.path.join(tmp_dir, f"page_{page_index}.png")
             image.save(page_image_path)
 
-            output_dir = output_dir / f"page_{page_index}"
+            output_dir = output_dir + f"page_{page_index}"
 
             result = model.infer(
                 tokenizer,
                 prompt=args.prompt,
                 image_file=page_image_path,
-                output_path=str(output_dir),
+                output_path=output_dir,
                 base_size=args.base_size,
                 image_size=args.image_size,
                 crop_mode=args.crop_mode,
