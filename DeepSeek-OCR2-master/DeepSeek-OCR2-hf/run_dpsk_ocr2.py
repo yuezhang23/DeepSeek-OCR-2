@@ -55,8 +55,6 @@ def main():
 		crop_mode=args.crop_mode,
 		save_results=args.save_results,
 	)
-	print(f"res type: {type(res)}, res: {res}")
-
 
 if __name__ == "__main__":
 	main()
