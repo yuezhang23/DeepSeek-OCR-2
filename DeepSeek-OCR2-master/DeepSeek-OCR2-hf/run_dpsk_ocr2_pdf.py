@@ -231,11 +231,13 @@ def main():
             page_image_path = os.path.join(tmp_dir, f"page_{page_index}.png")
             image.save(page_image_path)
 
+            output_dir = output_dir / f"page_{page_index}"
+
             result = model.infer(
                 tokenizer,
                 prompt=args.prompt,
                 image_file=page_image_path,
-                output_path=f"args.output_path_{page_index}",
+                output_path=str(output_dir),
                 base_size=args.base_size,
                 image_size=args.image_size,
                 crop_mode=args.crop_mode,
