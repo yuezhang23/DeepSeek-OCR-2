@@ -70,6 +70,7 @@ def pdf_to_images_high_quality(pdf_path, dpi=144, image_format="PNG"):
     from pathlib import Path
 
     path = Path(pdf_path)
+    print(path)
     pdf_document = fitz.open(path)
     
     zoom = dpi / 72.0
