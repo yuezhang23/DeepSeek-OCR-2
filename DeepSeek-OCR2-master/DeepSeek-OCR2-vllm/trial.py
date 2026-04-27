@@ -11,7 +11,7 @@ def pdf_to_images_high_quality(pdf_path, dpi=144, image_format="PNG"):
     images = []
 
     if not os.path.exists(pdf_path):
-        print("pdf path non exist")
+        print(f"pdf path {pdf_path} non exist")
     pdf_document = fitz.open(pdf_path)
     
     zoom = dpi / 72.0
