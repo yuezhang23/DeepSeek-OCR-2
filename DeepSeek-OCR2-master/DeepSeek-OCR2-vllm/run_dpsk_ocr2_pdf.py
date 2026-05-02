@@ -69,9 +69,7 @@ def pdf_to_images_high_quality(pdf_path, dpi=144, image_format="PNG"):
     images = []
     from pathlib import Path
 
-    path = Path(pdf_path)
-    print(path)
-    pdf_document = fitz.open(path)
+    pdf_document = fitz.open(pdf_path)
     
     zoom = dpi / 72.0
     matrix = fitz.Matrix(zoom, zoom)
